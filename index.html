@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f5d62">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Baş Ağrısı Günlüğü</title>
+<style>
+:root{--bg:#f3f6f6;--card:#fff;--ink:#1d2b2d;--mute:#5f7376;--line:#d5e0e0;--main:#2f5d62;--soft:#dcebea;--warn:#c2452d;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a1b;--card:#1a2527;--ink:#e6eff0;--mute:#8fa5a8;--line:#2b3b3d;--main:#7fc1c4;--soft:#22393b;--warn:#ff8a70}}
+:root[data-theme="dark"]{--bg:#121a1b;--card:#1a2527;--ink:#e6eff0;--mute:#8fa5a8;--line:#2b3b3d;--main:#7fc1c4;--soft:#22393b;--warn:#ff8a70}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;max-width:640px;margin:0 auto;padding:14px 14px 40px}
+h1{font-size:1.35rem;margin:4px 0 12px}
+.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.nav b{font-size:1.15rem}
+button{font:inherit;color:inherit;cursor:pointer}
+.ic{background:var(--card);border:1px solid var(--line);border-radius:10px;width:44px;height:44px;font-size:1.2rem}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.dow{text-align:center;font-size:.8rem;color:var(--mute);padding:4px 0}
+.day{aspect-ratio:1/1.05;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;font-size:.85rem}
+.day.empty{visibility:hidden}
+.day.today{outline:2px solid var(--main)}
+.day .f{font-size:1.15rem;align-self:center;line-height:1}
+.day .n{font-size:.68rem;color:var(--mute);align-self:center}
+.stats{display:flex;gap:8px;margin:12px 0}
+.stats div{flex:1;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center}
+.stats b{display:block;font-size:1.3rem;color:var(--main)}.stats span{font-size:.75rem;color:var(--mute)}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.btn{background:var(--main);color:var(--bg);border:0;border-radius:10px;padding:11px 16px;font-weight:600}
+.btn.alt{background:var(--card);color:var(--ink);border:1px solid var(--line);font-weight:500}
+.btn.del{background:none;color:var(--warn);border:1px solid var(--warn)}
+dialog{border:0;border-radius:16px;padding:0;width:min(600px,96vw);max-height:92vh;background:var(--bg);color:var(--ink)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.sheet{padding:16px}
+.sheet h2{margin:0 0 10px;font-size:1.15rem}
+.entry{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;gap:10px;align-items:center;cursor:pointer}
+.entry .f{font-size:1.7rem}.entry small{color:var(--mute);display:block}
+label{display:block;font-weight:600;font-size:.9rem;margin:12px 0 5px}
+select,input[type=number],input[type=text]{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.faces{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.faces button{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:6px 0;font-size:1.5rem;line-height:1.1}
+.faces button small{display:block;font-size:.75rem;color:var(--mute);font-weight:700}
+.faces button.on{border-color:var(--main);background:var(--soft)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:9px 14px}
+.chips button.on{background:var(--main);color:var(--bg);border-color:var(--main)}
+.actions{display:flex;gap:8px;margin-top:18px}.actions .btn{flex:1}
+.muted{color:var(--mute);font-size:.85rem}
+</style>
+</head>
+<body>
+<h1>Baş Ağrısı Günlüğü</h1>
+<div class="nav">
+  <button class="ic" id="prev" aria-label="Önceki ay">‹</button>
+  <b id="title"></b>
+  <button class="ic" id="next" aria-label="Sonraki ay">›</button>
+</div>
+<div class="grid" id="cal"></div>
+<div class="stats">
+  <div><b id="s1">0</b><span>Ağrılı gün</span></div>
+  <div><b id="s2">0</b><span>Kayıt</span></div>
+  <div><b id="s3">–</b><span>Ort. şiddet</span></div>
+</div>
+<div class="tools">
+  <button class="btn" id="today">Bugünü kaydet</button>
+  <button class="btn alt" id="xl">Excel</button>
+  <button class="btn alt" id="pdf">PDF</button>
+  <button class="btn alt" id="exp">Yedekle</button>
+  <button class="btn alt" id="imp">Geri yükle</button>
+  <input type="file" id="file" accept=".json" hidden>
+</div>
+<p class="muted">Kayıtlar yalnızca bu cihazda saklanır. Bir güne dokunarak kayıt ekleyin.</p>
+
+<dialog id="dlg"><div class="sheet" id="sheet"></div></dialog>
+
+<script>
+const AY=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+const FACE=["😀","🙂","🙂","😐","😕","😟","😣","😖","😫","😭","🤯"];
+const TET=["Stres","Uykusuzluk","Aşırı uyku","Menstruasyon","Öğün atlama","Susuzluk","Yolculuk","Enfeksiyon","Koku","TV/Bilgisayar/Telefon ile haşır neşir olmak","Güneşli/Parlak ışık","Gürültüye maruz kalma"];
+const GIDA=["Çikolata","Fındık","Konserve gıdalar","Kaşar peyniri","Kafeinli içecekler (çay, kahve, asitli içecekler)","Sucuk, salam, sosis, pastırma, jambon gibi şarküteri ürünleri","Hazır et ve tavuk suyu tabletleri","Deniz ürünleri (kalamar, karides, midye)","Yağlı ve baharatlı yiyecekler"];
+const ZAMAN=["Sabah","Öğlen","Akşam"];
+const CHK=[["bulanti","Bulantı"],["kusma","Kusma"],["isik","Işıktan rahatsızlık"],["ses","Sesten rahatsızlık"]];
+let data={},cur=new Date(),form=null,day=null;
+try{data=JSON.parse(localStorage.getItem("bas-agrisi")||"{}")}catch(e){}
+const save=()=>{try{localStorage.setItem("bas-agrisi",JSON.stringify(data))}catch(e){}};
+const $=id=>document.getElementById(id);
+const key=(y,m,d)=>`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+const uid=()=>Math.random().toString(36).slice(2,9);
+const opts=(a,v,ph)=>`<option value="">${ph}</option>`+a.map(x=>`<option${x===v?" selected":""}>${x}</option>`).join("");
+
+function render(){
+  const y=cur.getFullYear(),m=cur.getMonth();
+  $("title").textContent=`${AY[m]} ${y}`;
+  const first=(new Date(y,m,1).getDay()+6)%7,days=new Date(y,m+1,0).getDate();
+  const t=new Date();let h=["Pt","Sa","Ça","Pe","Cu","Ct","Pz"].map(x=>`<div class="dow">${x}</div>`).join("");
+  for(let i=0;i<first;i++)h+='<div class="day empty"></div>';
+  let pain=0,cnt=0,sum=0;
+  for(let d=1;d<=days;d++){
+    const k=key(y,m,d),es=data[k]||[];
+    let inner=`<span>${d}</span>`;
+    if(es.length){const mx=Math.max(...es.map(e=>e.sev));pain++;cnt+=es.length;sum+=es.reduce((a,e)=>a+e.sev,0);
+      inner+=`<span class="f">${FACE[mx]}</span><span class="n">${mx}/10</span>`}
+    h+=`<button class="day${t.getFullYear()==y&&t.getMonth()==m&&t.getDate()==d?" today":""}" data-k="${k}">${inner}</button>`;
+  }
+  $("cal").innerHTML=h;
+  $("s1").textContent=pain;$("s2").textContent=cnt;$("s3").textContent=cnt?(sum/cnt).toFixed(1):"–";
+}
+$("cal").onclick=e=>{const b=e.target.closest(".day[data-k]");if(b)openDay(b.dataset.k)};
+$("prev").onclick=()=>{cur=new Date(cur.getFullYear(),cur.getMonth()-1,1);render()};
+$("next").onclick=()=>{cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);render()};
+$("today").onclick=()=>{const t=new Date();cur=new Date(t.getFullYear(),t.getMonth(),1);render();openDay(key(t.getFullYear(),t.getMonth(),t.getDate()),true)};
+
+function fmt(k){const[y,m,d]=k.split("-");return `${+d} ${AY[m-1]} ${y}`}
+function openDay(k,add){
+  day=k;const es=data[k]||[];
+  if(add||!es.length)return openForm(null);
+  $("sheet").innerHTML=`<h2>${fmt(k)}</h2>`+es.map(e=>`<div class="entry" data-id="${e.id}"><span class="f">${FACE[e.sev]}</span><div><b>Şiddet ${e.sev}/10</b> · ${e.zaman||"–"}<small>${[e.tet,e.gida].filter(Boolean).join(" + ")||"Tetikleyici seçilmedi"}</small></div></div>`).join("")+
+  `<div class="actions"><button class="btn alt" id="c">Kapat</button><button class="btn" id="a">Kayıt ekle</button></div>`;
+  $("sheet").onclick=ev=>{const en=ev.target.closest(".entry");if(en)openForm(en.dataset.id);};
+  $("c").onclick=()=>$("dlg").close();$("a").onclick=()=>openForm(null);
+  if(!$("dlg").open)$("dlg").showModal();
+}
+function openForm(id){
+  const ex=id&&(data[day]||[]).find(e=>e.id===id);
+  form=ex?{...ex}:{id:uid(),sev:null,zaman:"",sure:"",birim:"saat",tet:"",gida:"",kesici:"",bulanti:false,kusma:false,isik:false,ses:false};
+  drawForm(!!ex);
+  if(!$("dlg").open)$("dlg").showModal();
+}
+function drawForm(isEdit){
+  const f=form;
+  $("sheet").innerHTML=`<h2>${fmt(day)}</h2>
+  <label>Ağrının şiddeti (0–10)</label>
+  <div class="faces">${FACE.map((x,i)=>`<button data-s="${i}" class="${f.sev===i?"on":""}">${x}<small>${i}</small></button>`).join("")}</div>
+  <label>Başlama zamanı</label>
+  <div class="chips">${ZAMAN.map(z=>`<button data-z="${z}" class="${f.zaman===z?"on":""}">${z}</button>`).join("")}</div>
+  <label>Süresi</label>
+  <div class="row"><input type="number" min="0" id="sure" placeholder="Örn. 3" value="${f.sure}"><select id="birim">${["dakika","saat","gün"].map(u=>`<option${u===f.birim?" selected":""}>${u}</option>`).join("")}</select></div>
+  <label>Tetikleyici</label><select id="tet">${opts(TET,f.tet,"Seçin")}</select>
+  <label>Belli gıda (ikinci tetikleyici)</label><select id="gida">${opts(GIDA,f.gida,"Seçin")}</select>
+  <label>Ağrı kesici</label><input type="text" id="kesici" placeholder="İlaç adı (almadıysanız boş bırakın)" value="${f.kesici}">
+  <label>Eşlik eden belirtiler</label>
+  <div class="chips">${CHK.map(([k,n])=>`<button data-c="${k}" class="${f[k]?"on":""}">${n}</button>`).join("")}</div>
+  <div class="actions">${isEdit?'<button class="btn del" id="del">Sil</button>':""}<button class="btn alt" id="cancel">Vazgeç</button><button class="btn" id="ok">Kaydet</button></div>`;
+  const s=$("sheet");
+  s.onclick=e=>{const b=e.target.closest("button");if(!b)return;
+    if(b.dataset.s!==undefined){keep();f.sev=+b.dataset.s;drawForm(isEdit)}
+    else if(b.dataset.z){keep();f.zaman=f.zaman===b.dataset.z?"":b.dataset.z;drawForm(isEdit)}
+    else if(b.dataset.c){keep();f[b.dataset.c]=!f[b.dataset.c];drawForm(isEdit)}};
+  function keep(){f.sure=$("sure").value;f.birim=$("birim").value;f.tet=$("tet").value;f.gida=$("gida").value;f.kesici=$("kesici").value.trim()}
+  $("cancel").onclick=()=>$("dlg").close();
+  if(isEdit)$("del").onclick=()=>{data[day]=data[day].filter(e=>e.id!==f.id);if(!data[day].length)delete data[day];save();render();$("dlg").close()};
+  $("ok").onclick=()=>{keep();if(f.sev===null){alert("Lütfen ağrı şiddetini yüzlerden seçin.");return}
+    const l=data[day]||[],i=l.findIndex(e=>e.id===f.id);i>=0?l[i]=f:l.push(f);data[day]=l;save();render();$("dlg").close()};
+}
+$("exp").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:"application/json"}));a.download="bas-agrisi-yedek.json";a.click()};
+$("imp").onclick=()=>$("file").click();
+$("file").onchange=e=>{const r=new FileReader();r.onload=()=>{try{data=JSON.parse(r.result);save();render()}catch(x){alert("Dosya okunamadı.")}};r.readAsText(e.target.files[0])};
+render();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+<script src="export.js"></script>
+</body>
+</html>
