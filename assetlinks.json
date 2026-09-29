@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.siberavci.twa",
+        "sha256_cert_fingerprints": ["87:5F:D9:6A:80:DE:6E:D9:FC:30:D6:43:58:D4:B8:23:D8:0F:B4:5F:DD:38:79:AC:9F:21:0B:50:21:32:59:10"]
+      }
+    }]
